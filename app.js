@@ -171,11 +171,42 @@ function Filters({ filters, onChange, options }) {
 
 /* ---------- PropertyCard ---------- */
 
+function AlertIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M12 2 L22 20 H2 Z"
+        fill="currentColor"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path d="M12 9 V14" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="17" r="1.2" fill="white" />
+    </svg>
+  );
+}
+
+function AlertTags({ tags, compact }) {
+  if (!tags || tags.length === 0) return null;
+  return (
+    <div className={`alert-tags${compact ? ' alert-tags-compact' : ''}`}>
+      {tags.map((t) => (
+        <span key={t} className="alert-tag">
+          <AlertIcon />
+          {t}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function PropertyCard({ property, selected, onSelect }) {
+  const hasAlerts = property.alertTags && property.alertTags.length > 0;
   return (
     <button
       type="button"
-      className={`property-card${selected ? ' is-selected' : ''}`}
+      className={`property-card${selected ? ' is-selected' : ''}${hasAlerts ? ' has-alerts' : ''}`}
       onClick={() => onSelect(property.id)}
     >
       <div className="property-card-top">
@@ -187,6 +218,8 @@ function PropertyCard({ property, selected, onSelect }) {
         </div>
         <div className="property-card-type">{property.type}</div>
       </div>
+
+      <AlertTags tags={property.alertTags} compact />
 
       <div className="property-card-mid">
         <span className="signal-type">{property.signalType}</span>
@@ -279,17 +312,41 @@ function MapView({ properties, selectedId, onSelect, visible }) {
     markersRef.current.clear();
 
     properties.forEach((p) => {
+      const hasAlerts = p.alertTags && p.alertTags.length > 0;
+      const isSelected = p.id === selectedId;
+
+      // For tagged properties we render two layers: an outer red ring,
+      // then the standard severity-coloured marker on top.
+      if (hasAlerts) {
+        const ring = L.circleMarker([p.lat, p.lng], {
+          radius: isSelected ? 16 : 12,
+          color: '#dc2626',
+          weight: 3,
+          opacity: 0.9,
+          fill: false,
+          interactive: false,
+        }).addTo(map);
+        markersRef.current.set(p.id + '__ring', ring);
+      }
+
+      const tagList = hasAlerts
+        ? `<div class="map-popup-alerts">${p.alertTags
+            .map((t) => `<span class="alert-tag">${t}</span>`)
+            .join('')}</div>`
+        : '';
+
       const marker = L.circleMarker([p.lat, p.lng], {
-        radius: p.id === selectedId ? 11 : 7,
+        radius: isSelected ? 11 : 7,
         color: '#ffffff',
         weight: 2,
         fillColor: SEVERITY_COLOR[p.severity] || '#066abe',
-        fillOpacity: 0.9,
+        fillOpacity: 0.95,
       })
         .addTo(map)
         .bindPopup(
           `<div class="map-popup-title">${p.address}</div>
            <div class="map-popup-sub">${p.city} · ${p.postcode}</div>
+           ${tagList}
            <div class="map-popup-meta">
              <span>Signal: <strong>${p.signalType}</strong></span>
              <span>Severity: <strong>${p.severity}</strong></span>
@@ -331,6 +388,8 @@ function MapView({ properties, selectedId, onSelect, visible }) {
         <span className="legend-item"><i style={{ background: SEVERITY_COLOR.Medium }} />Medium</span>
         <span className="legend-item"><i style={{ background: SEVERITY_COLOR.High }} />High</span>
         <span className="legend-item"><i style={{ background: SEVERITY_COLOR.Critical }} />Critical</span>
+        <span className="legend-divider" />
+        <span className="legend-item"><i className="legend-ring" />Has alert tag</span>
       </div>
     </div>
   );
@@ -380,6 +439,21 @@ function DetailsView({ property }) {
           </span>
         </div>
       </header>
+
+      {property.alertTags && property.alertTags.length > 0 && (
+        <section className="details-card details-card-alerts">
+          <h3 className="details-card-title">
+            <span className="alerts-title-icon"><AlertIcon /></span>
+            Active alerts
+            <span className="alerts-count">{property.alertTags.length}</span>
+          </h3>
+          <AlertTags tags={property.alertTags} />
+          <p className="details-notes details-alerts-note">
+            Triggered by recent signals affecting this property. Review the
+            intelligence notes below for context.
+          </p>
+        </section>
+      )}
 
       <section className="details-hero">
         <div className="details-hero-value">
@@ -532,22 +606,47 @@ function App() {
         />
 
         <section className="workspace">
-          <div className="tabs">
+          <div className="tabs" role="tablist" aria-label="Workspace view">
             <button
               type="button"
+              role="tab"
+              aria-selected={activeTab === 'map'}
               className={`tab${activeTab === 'map' ? ' is-active' : ''}`}
               onClick={() => setActiveTab('map')}
             >
-              Map
+              <span className="tab-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M9 3 L3 5 V21 L9 19 L15 21 L21 19 V3 L15 5 Z"
+                    stroke="currentColor" strokeWidth="1.8"
+                    strokeLinejoin="round" fill="none"
+                  />
+                  <path d="M9 3 V19 M15 5 V21"
+                    stroke="currentColor" strokeWidth="1.8" />
+                </svg>
+              </span>
+              <span className="tab-label">Map view</span>
+              <span className="tab-count">{filtered.length}</span>
             </button>
+
             <button
               type="button"
+              role="tab"
+              aria-selected={activeTab === 'details'}
               className={`tab${activeTab === 'details' ? ' is-active' : ''}`}
               onClick={() => setActiveTab('details')}
             >
-              Details
+              <span className="tab-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <rect x="4" y="3" width="16" height="18" rx="2"
+                    stroke="currentColor" strokeWidth="1.8" />
+                  <path d="M8 8 H16 M8 12 H16 M8 16 H13"
+                    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+              </span>
+              <span className="tab-label">Property details</span>
               {selectedProperty && (
-                <span className="tab-hint"> · {selectedProperty.address}</span>
+                <span className="tab-hint">{selectedProperty.address}</span>
               )}
             </button>
           </div>

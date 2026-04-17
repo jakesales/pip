@@ -330,6 +330,48 @@ button {
   box-shadow: 0 0 0 1px var(--primary);
 }
 
+/* Properties with active alert tags get a red left-edge accent */
+.property-card.has-alerts {
+  border-left: 3px solid #dc2626;
+}
+
+.property-card.has-alerts.is-selected {
+  border-left-color: #dc2626;
+}
+
+/* ---------- Alert tags (shared: card, details, popup) ---------- */
+
+.alert-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 10px 0;
+}
+
+.alert-tags-compact {
+  margin: 0 0 8px 0;
+}
+
+.alert-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 3px 8px;
+  border-radius: 999px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.alert-tag svg {
+  color: #dc2626;
+  flex-shrink: 0;
+}
+
 .property-card-top {
   display: flex;
   justify-content: space-between;
@@ -456,38 +498,99 @@ button {
 
 .tabs {
   display: flex;
-  gap: 4px;
-  padding: 10px 12px 0 12px;
+  gap: 8px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--stroke);
-  background: var(--surface);
+  background: var(--surface-alt);
 }
 
 .tab {
-  padding: 10px 16px;
-  font-size: 13px;
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-muted);
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
+  background: var(--surface);
+  border: 1.5px solid var(--stroke);
+  border-radius: 10px;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
-  margin-bottom: -1px;
+  transition: all 0.15s ease;
+  text-align: left;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .tab:hover {
   color: var(--text);
+  border-color: #cfd6de;
+  background: #f8fafc;
 }
 
 .tab.is-active {
+  color: #ffffff;
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(6, 106, 190, 0.28);
+}
+
+.tab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(6, 106, 190, 0.08);
   color: var(--primary);
-  border-bottom-color: var(--primary);
+  flex: 0 0 auto;
+}
+
+.tab.is-active .tab-icon {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.tab-label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.tab-count {
+  margin-left: auto;
+  min-width: 28px;
+  padding: 2px 8px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(6, 106, 190, 0.1);
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.tab.is-active .tab-count {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .tab-hint {
-  font-weight: 400;
-  color: var(--text-soft);
+  margin-left: auto;
+  font-weight: 500;
   font-size: 12px;
+  color: var(--text-soft);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 0 1 auto;
+}
+
+.tab.is-active .tab-hint {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .tab-panel {
@@ -552,6 +655,20 @@ button {
   box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
 }
 
+.legend-item i.legend-ring {
+  background: transparent;
+  border: 2px solid #dc2626;
+  box-shadow: none;
+  width: 12px;
+  height: 12px;
+}
+
+.legend-divider {
+  width: 1px;
+  height: 14px;
+  background: var(--stroke);
+}
+
 .map-popup-title {
   font-size: 13px;
   font-weight: 600;
@@ -571,6 +688,18 @@ button {
   margin-top: 8px;
   font-size: 12px;
   color: var(--text);
+}
+
+.map-popup-alerts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.map-popup-alerts .alert-tag {
+  font-size: 10px;
+  padding: 2px 6px;
 }
 
 /* ---------- Details ---------- */
@@ -678,6 +807,41 @@ button {
 
 .stat-custom .stat-value {
   color: #5b21b6;
+}
+
+/* Alerts card in details view */
+.details-card-alerts {
+  background: linear-gradient(180deg, #fff5f5 0%, #ffffff 100%);
+  border-color: #fecaca;
+}
+
+.details-card-alerts .details-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #991b1b;
+}
+
+.alerts-title-icon {
+  display: inline-flex;
+  color: #dc2626;
+}
+
+.alerts-count {
+  margin-left: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #991b1b;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+
+.details-alerts-note {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 .details-grid {

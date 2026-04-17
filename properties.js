@@ -43,6 +43,41 @@ window.OWNERS = [
 window.TENURES = ['Freehold', 'Leasehold', 'Share of Freehold'];
 window.EPC_RATINGS = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
+window.ALERT_TAGS = [
+  'Flood/subsidence exposure',
+  'Crime spike',
+  'Environmental risk',
+  'EPC Rating',
+  'Listed Building',
+  'Non-Standard Construction',
+];
+
+// Per-neighbourhood pool of plausible alert tags. Picked from when we
+// assign tags to the 20 chosen properties, so the tag/area pairing is
+// believable on the map.
+const TAGS_BY_NEIGHBOURHOOD = {
+  'Westminster':       ['Listed Building', 'Crime spike'],
+  'Belgravia':         ['Listed Building'],
+  'Pimlico':           ['Listed Building', 'EPC Rating'],
+  'Chelsea':           ['Listed Building'],
+  'Clapham':           ['EPC Rating', 'Crime spike'],
+  'Earls Court':       ['Crime spike', 'Non-Standard Construction'],
+  'Fulham':            ['Flood/subsidence exposure', 'EPC Rating'],
+  'South Kensington':  ['Listed Building'],
+  'South Lambeth':     ['Environmental risk', 'Crime spike', 'Non-Standard Construction'],
+  'Brixton':           ['Crime spike', 'EPC Rating'],
+  'West Brompton':     ['Listed Building', 'EPC Rating'],
+  'Battersea':         ['Flood/subsidence exposure', 'Environmental risk'],
+  'Balham':            ['EPC Rating', 'Non-Standard Construction'],
+  'Barnes':            ['Flood/subsidence exposure', 'Listed Building'],
+  'Mortlake':          ['Flood/subsidence exposure'],
+  'Putney':            ['Flood/subsidence exposure', 'EPC Rating'],
+  'Streatham':         ['Crime spike', 'EPC Rating', 'Non-Standard Construction'],
+  'Tooting':           ['Crime spike', 'EPC Rating'],
+  'Wandsworth':        ['Flood/subsidence exposure', 'Environmental risk'],
+  'Wimbledon':         ['EPC Rating', 'Non-Standard Construction'],
+};
+
 /* ---------- seeded PRNG (Mulberry32) ---------- */
 
 function makeRng(seed) {
@@ -463,6 +498,42 @@ NEIGHBOURHOODS.forEach((n) => {
       isUnlicensedHmo: isHmo,
       floodRisk: flood,
       notes: noteFor(signalType, n.name),
+      alertTags: [],
     });
   }
+});
+
+/* ---------- assign alert tags to exactly 20 properties ----------
+ *
+ * We pick a deterministic random subset of 20 (out of 100) and give
+ * each 1-2 alert tags from its neighbourhood's plausible-tag pool.
+ */
+
+function shuffleIndices(length, rngFn) {
+  const arr = Array.from({ length }, (_, i) => i);
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rngFn() * (i + 1));
+    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+  return arr;
+}
+
+const TAGGED_COUNT = 20;
+const taggedIndices = new Set(
+  shuffleIndices(window.PROPERTIES.length, rng).slice(0, TAGGED_COUNT)
+);
+
+window.PROPERTIES.forEach((p, idx) => {
+  if (!taggedIndices.has(idx)) return;
+  const pool = TAGS_BY_NEIGHBOURHOOD[p.city] || window.ALERT_TAGS;
+  const tagCount = pool.length === 1 ? 1 : (rnd() < 0.35 ? 2 : 1);
+
+  // Pick `tagCount` distinct tags from the pool.
+  const chosen = new Set();
+  let safety = 0;
+  while (chosen.size < tagCount && safety < 20) {
+    chosen.add(pool[Math.floor(rnd() * pool.length)]);
+    safety++;
+  }
+  p.alertTags = Array.from(chosen);
 });
