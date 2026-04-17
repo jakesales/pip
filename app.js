@@ -252,8 +252,8 @@ function MapView({ properties, selectedId, onSelect, visible }) {
     if (mapRef.current || !containerRef.current) return;
 
     const map = L.map(containerRef.current, {
-      center: [54.5, -2.5],
-      zoom: 6,
+      center: [51.475, -0.18],
+      zoom: 12,
       scrollWheelZoom: true,
     });
 
@@ -303,7 +303,7 @@ function MapView({ properties, selectedId, onSelect, visible }) {
 
     if (properties.length) {
       const latLngs = properties.map((p) => [p.lat, p.lng]);
-      map.fitBounds(latLngs, { padding: [40, 40], maxZoom: 11, animate: false });
+      map.fitBounds(latLngs, { padding: [40, 40], maxZoom: 14, animate: false });
     }
   }, [properties, onSelect]);
 
