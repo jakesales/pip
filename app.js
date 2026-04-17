@@ -73,6 +73,85 @@ const SORT_OPTIONS = [
 ];
 
 const SEVERITY_RANK = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+const SUMMARY_TAG_ORDER = [
+  'Flood/subsidence exposure',
+  'Crime spikes',
+  'Environmental risk',
+  'EPC Rating',
+  'Listed Building',
+  'Non-Standard construction',
+];
+
+function SummaryTagIcon({ tag }) {
+  const base = { width: '14', height: '14', viewBox: '0 0 24 24', fill: 'none', 'aria-hidden': 'true' };
+  if (tag === 'Flood/subsidence exposure') {
+    return (
+      <svg {...base}>
+        <path d="M12 3 C10 6 7 9 7 12 A5 5 0 0 0 17 12 C17 9 14 6 12 3 Z" stroke="currentColor" strokeWidth="1.8" />
+        <path d="M4 18 C5 17 6 17 7 18 C8 19 9 19 10 18 C11 17 12 17 13 18 C14 19 15 19 16 18 C17 17 18 17 20 18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (tag === 'Crime spikes') {
+    return (
+      <svg {...base}>
+        <path d="M4 14 L10 8 L14 12 L20 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M16 6 H20 V10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (tag === 'Environmental risk') {
+    return (
+      <svg {...base}>
+        <path d="M6 14 C6 10 10 7 15 6 C14 11 11 16 7 17 C6.4 16 6 15 6 14 Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+        <path d="M8 16 L12 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (tag === 'EPC Rating') {
+    return (
+      <svg {...base}>
+        <rect x="5" y="4" width="14" height="16" rx="2" stroke="currentColor" strokeWidth="1.8" />
+        <path d="M8 9 H16 M8 13 H13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (tag === 'Listed Building') {
+    return (
+      <svg {...base}>
+        <path d="M4 9 L12 4 L20 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M6 10 V18 M10 10 V18 M14 10 V18 M18 10 V18 M4 18 H20" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...base}>
+      <path d="M4 18 H20 M6 18 V12 L10 8 V18 M14 18 V10 L18 6 V18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SummaryBar({ counts, taggedTotal }) {
+  return (
+    <section className="summary-bar" aria-label="Alert tag summary">
+      <div className="summary-bar-title">
+        <span className="summary-bar-title-main">Alert Summary</span>
+        <span className="summary-bar-title-sub">{taggedTotal} tagged properties</span>
+      </div>
+      <div className="summary-cards">
+        {SUMMARY_TAG_ORDER.map((tag) => (
+          <article key={tag} className="summary-card">
+            <span className="summary-card-icon">
+              <SummaryTagIcon tag={tag} />
+            </span>
+            <span className="summary-card-label">{tag}</span>
+            <span className="summary-card-count">{counts[tag] || 0}</span>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 function sortProperties(items, sortBy) {
   const copy = items.slice();
@@ -692,6 +771,18 @@ function App() {
     () => all.find((p) => p.id === selectedId) || null,
     [all, selectedId]
   );
+  const summaryCounts = useMemo(() => {
+    const counts = {};
+    SUMMARY_TAG_ORDER.forEach((tag) => { counts[tag] = 0; });
+    all.forEach((p) => {
+      if (p.pillTag && counts[p.pillTag] !== undefined) counts[p.pillTag] += 1;
+    });
+    return counts;
+  }, [all]);
+  const taggedTotal = useMemo(
+    () => all.filter((p) => Boolean(p.pillTag)).length,
+    [all]
+  );
 
   return (
     <div className="app">
@@ -712,6 +803,8 @@ function App() {
           </div>
         </div>
       </header>
+
+      <SummaryBar counts={summaryCounts} taggedTotal={taggedTotal} />
 
       <main className="app-main">
         <Portfolio

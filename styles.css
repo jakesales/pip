@@ -107,6 +107,89 @@ button {
   min-height: 0;
 }
 
+/* ---------- Top summary strip ---------- */
+
+.summary-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--stroke);
+  background: #fbfcfe;
+  flex-shrink: 0;
+}
+
+.summary-bar-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 180px;
+}
+
+.summary-bar-title-main {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.summary-bar-title-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(120px, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.summary-card {
+  border: 1px solid var(--stroke);
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.summary-card-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  background: var(--primary-50);
+  border: 1px solid rgba(6, 106, 190, 0.18);
+  flex-shrink: 0;
+}
+
+.summary-card-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summary-card-count {
+  min-width: 24px;
+  padding: 2px 6px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary-100);
+  border-radius: 999px;
+}
+
 /* ---------- Portfolio (left) ---------- */
 
 .portfolio {
@@ -785,6 +868,11 @@ button {
   width: 100%;
 }
 
+/* Keep basemap subdued so severity markers stand out. */
+.map-container .leaflet-tile {
+  filter: grayscale(1);
+}
+
 .map-legend {
   position: absolute;
   bottom: 16px;
@@ -1079,6 +1167,19 @@ button {
 /* ---------- Responsive ---------- */
 
 @media (max-width: 900px) {
+  .summary-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .summary-bar-title {
+    min-width: 0;
+  }
+
+  .summary-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .app-main {
     grid-template-columns: 1fr;
     grid-template-rows: 50% 1fr;
