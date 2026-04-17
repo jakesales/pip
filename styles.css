@@ -236,6 +236,74 @@ button {
   margin-top: 12px;
 }
 
+/* ---------- Sort toolbar ---------- */
+
+.sort-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--stroke);
+}
+
+.sort-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+  flex-shrink: 0;
+}
+
+.sort-label-icon {
+  display: inline-flex;
+  color: var(--text-soft);
+}
+
+.sort-select-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.sort-select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  padding: 7px 30px 7px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sort-select:hover {
+  border-color: #cfd6de;
+}
+
+.sort-select:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-50);
+}
+
+.sort-select-chevron {
+  position: absolute;
+  right: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+  display: inline-flex;
+}
+
 .portfolio-title {
   font-size: 15px;
   font-weight: 600;

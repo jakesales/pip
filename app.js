@@ -66,6 +66,35 @@ const HMO_OPTIONS = [
   { value: 'no', label: 'No' },
 ];
 
+const SORT_OPTIONS = [
+  { value: 'date-desc', label: 'Date added · newest first' },
+  { value: 'date-asc', label: 'Date added · oldest first' },
+  { value: 'alert-desc', label: 'High alert first' },
+];
+
+const SEVERITY_RANK = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+
+function sortProperties(items, sortBy) {
+  const copy = items.slice();
+  if (sortBy === 'date-asc') {
+    copy.sort((a, b) => a.dateAdded.localeCompare(b.dateAdded));
+    return copy;
+  }
+  if (sortBy === 'alert-desc') {
+    copy.sort((a, b) => {
+      const aTagged = (a.alertTags && a.alertTags.length > 0) ? 1 : 0;
+      const bTagged = (b.alertTags && b.alertTags.length > 0) ? 1 : 0;
+      if (aTagged !== bTagged) return bTagged - aTagged;
+      const sev = (SEVERITY_RANK[b.severity] || 0) - (SEVERITY_RANK[a.severity] || 0);
+      if (sev !== 0) return sev;
+      return b.dateAdded.localeCompare(a.dateAdded);
+    });
+    return copy;
+  }
+  copy.sort((a, b) => b.dateAdded.localeCompare(a.dateAdded));
+  return copy;
+}
+
 function FilterSelect({ label, value, onChange, options, hint }) {
   return (
     <label className="filter">
@@ -219,19 +248,10 @@ function PropertyCard({ property, selected, onSelect }) {
         <div className="property-card-type">{property.type}</div>
       </div>
 
-      <AlertTags tags={property.alertTags} compact />
-
-      <div className="property-card-mid">
-        <span className="signal-type">{property.signalType}</span>
-        <span className={SEVERITY_CLASS[property.severity]}>{property.severity}</span>
-      </div>
-
       <div className="property-card-bottom">
-        <span className={STATUS_CLASS[property.workflowStatus] || 'pill'}>
-          {property.workflowStatus}
-        </span>
+        {property.pillTag && <span className="signal-type">{property.pillTag}</span>}
         <span className="property-card-meta">
-          {property.assignedTo} · {formatDate(property.dateAdded)}
+          {property.workflowStatus} · {property.severity} · {property.assignedTo} · {formatDate(property.dateAdded)}
         </span>
       </div>
     </button>
@@ -246,10 +266,12 @@ function countActiveFilters(filters) {
 
 function Portfolio({
   properties, totalCount, filters, onFiltersChange, onFiltersReset,
-  options, selectedId, onSelect,
+  sortBy, onSortChange, options, selectedId, onSelect,
 }) {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const activeCount = countActiveFilters(filters);
+  const sortLabel =
+    (SORT_OPTIONS.find((o) => o.value === sortBy) || SORT_OPTIONS[0]).label;
 
   return (
     <aside className="portfolio">
@@ -309,6 +331,40 @@ function Portfolio({
           className={`filters-panel${isFiltersOpen ? ' is-open' : ''}`}
         >
           <Filters filters={filters} onChange={onFiltersChange} options={options} />
+        </div>
+
+        <div className="sort-toolbar">
+          <label className="sort-label" htmlFor="portfolio-sort">
+            <span className="sort-label-icon" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M7 5 V19 M7 5 L3 9 M7 5 L11 9
+                         M17 19 V5 M17 19 L13 15 M17 19 L21 15"
+                  stroke="currentColor" strokeWidth="2"
+                  strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+            <span className="sort-label-text">Sort by</span>
+          </label>
+          <div className="sort-select-wrap">
+            <select
+              id="portfolio-sort"
+              className="sort-select"
+              value={sortBy}
+              onChange={(e) => onSortChange(e.target.value)}
+              aria-label={`Sort portfolio — currently ${sortLabel}`}
+            >
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            <span className="sort-select-chevron" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M6 9 L12 15 L18 9"
+                  stroke="currentColor" strokeWidth="2.2"
+                  strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          </div>
         </div>
       </div>
 
@@ -477,6 +533,9 @@ function DetailsView({ property }) {
       </div>
     );
   }
+  const signalPill = property.alertTags && property.alertTags.length > 0
+    ? property.alertTags[0]
+    : null;
 
   return (
     <div className="details">
@@ -488,7 +547,7 @@ function DetailsView({ property }) {
           </div>
         </div>
         <div className="details-badges">
-          <span className="signal-type">{property.signalType}</span>
+          {signalPill && <span className="signal-type">{signalPill}</span>}
           <span className={SEVERITY_CLASS[property.severity]}>{property.severity}</span>
           <span className={STATUS_CLASS[property.workflowStatus] || 'pill'}>
             {property.workflowStatus}
@@ -607,6 +666,7 @@ function applyFilters(items, filters) {
 function App() {
   const all = window.PROPERTIES || [];
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [sortBy, setSortBy] = useState('date-desc');
   const [selectedId, setSelectedId] = useState(all[0] ? all[0].id : null);
   const [activeTab, setActiveTab] = useState('map');
 
@@ -624,7 +684,10 @@ function App() {
     [all]
   );
 
-  const filtered = useMemo(() => applyFilters(all, filters), [all, filters]);
+  const filtered = useMemo(
+    () => sortProperties(applyFilters(all, filters), sortBy),
+    [all, filters, sortBy]
+  );
   const selectedProperty = useMemo(
     () => all.find((p) => p.id === selectedId) || null,
     [all, selectedId]
@@ -657,6 +720,8 @@ function App() {
           filters={filters}
           onFiltersChange={setFilters}
           onFiltersReset={() => setFilters(DEFAULT_FILTERS)}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
           options={options}
           selectedId={selectedId}
           onSelect={setSelectedId}
