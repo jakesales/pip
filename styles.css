@@ -156,13 +156,65 @@ button {
   font-weight: 400;
 }
 
+.filter-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filter-group {
+  border-radius: var(--radius);
+  padding: 10px 10px 12px 10px;
+  background: var(--surface-alt);
+  border: 1px solid var(--stroke);
+}
+
+.filter-group-custom {
+  background: linear-gradient(180deg, #f6f1ff 0%, #faf7ff 100%);
+  border-color: #d8c8ff;
+}
+
+.filter-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 2px 8px 2px;
+}
+
+.filter-group-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.filter-group-custom .filter-group-title {
+  color: #7c3aed;
+}
+
+.filter-group-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #ede9fe;
+  color: #7c3aed;
+  border: 1px solid #d8c8ff;
+}
+
 .filters {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
-.filter:nth-child(3) {
+/* Single-column row for the last odd-one-out filter in a group */
+.filter-group .filters > .filter:nth-child(odd):last-child {
   grid-column: span 2;
 }
 
@@ -173,11 +225,26 @@ button {
 }
 
 .filter-label {
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 10px;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-hint {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #7c3aed;
+  background: #ede9fe;
+  border: 1px solid #d8c8ff;
+  padding: 1px 5px;
+  border-radius: 999px;
 }
 
 .filter select {
@@ -205,6 +272,16 @@ button {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(6, 106, 190, 0.15);
+}
+
+.filter-group-custom .filter select {
+  background-color: #ffffff;
+  border-color: #d8c8ff;
+}
+
+.filter-group-custom .filter select:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
 }
 
 .portfolio-list {
@@ -286,18 +363,61 @@ button {
   flex-shrink: 0;
 }
 
+.property-card-mid {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
 .property-card-bottom {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
-.property-card-date {
+.property-card-meta {
   font-size: 11px;
   color: var(--text-muted);
   margin-left: auto;
+  text-align: right;
 }
+
+/* Signal type — primary, brand-tinted pill */
+.signal-type {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--primary-100);
+  color: var(--primary);
+  border: 1px solid rgba(6, 106, 190, 0.2);
+  letter-spacing: 0.01em;
+}
+
+/* Generic pill, neutral */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.pill-status-new        { color: #1d4ed8; background: #dbeafe; border-color: #bfdbfe; }
+.pill-status-review     { color: #6e7981; background: #eef0f3; border-color: #d6dbe0; }
+.pill-status-action     { color: #b91c1c; background: #fee2e2; border-color: #fecaca; }
+.pill-status-waiting    { color: #b45309; background: #fef3c7; border-color: #fde68a; }
+.pill-status-resolved   { color: #166534; background: #dcfce7; border-color: #bbf7d0; }
+.pill-status-snoozed    { color: #6b7280; background: #f3f4f6; border-color: #e5e7eb; }
 
 /* ---------- Badges ---------- */
 
@@ -542,6 +662,22 @@ button {
   letter-spacing: 0.05em;
   color: var(--text-muted);
   margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.details-card-custom {
+  background: linear-gradient(180deg, #f6f1ff 0%, #ffffff 100%);
+  border-color: #d8c8ff;
+}
+
+.details-card-custom .details-card-title {
+  color: #7c3aed;
+}
+
+.stat-custom .stat-value {
+  color: #5b21b6;
 }
 
 .details-grid {
