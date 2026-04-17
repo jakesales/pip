@@ -518,7 +518,7 @@ function shuffleIndices(length, rngFn) {
   return arr;
 }
 
-const TAGGED_COUNT = 20;
+const TAGGED_COUNT = 10;
 const taggedIndices = new Set(
   shuffleIndices(window.PROPERTIES.length, rng).slice(0, TAGGED_COUNT)
 );

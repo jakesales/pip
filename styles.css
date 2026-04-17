@@ -131,7 +131,109 @@ button {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+}
+
+/* ---------- Collapsible filters ---------- */
+
+.filters-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filters-toggle {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filters-toggle:hover {
+  background: var(--surface-alt);
+  border-color: #cfd6de;
+}
+
+.filters-toggle.is-open {
+  background: var(--primary-50);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.filters-toggle-icon {
+  display: inline-flex;
+  color: var(--text-muted);
+}
+
+.filters-toggle.is-open .filters-toggle-icon {
+  color: var(--primary);
+}
+
+.filters-toggle-label {
+  flex: 1;
+  text-align: left;
+}
+
+.filters-toggle-count {
+  min-width: 20px;
+  padding: 1px 7px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  background: var(--primary);
+  border-radius: 999px;
+}
+
+.filters-toggle-chevron {
+  display: inline-flex;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.filters-toggle.is-open .filters-toggle-chevron {
+  color: var(--primary);
+  transform: rotate(180deg);
+}
+
+.filters-clear {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filters-clear:hover {
+  color: var(--text);
+  background: var(--surface-alt);
+}
+
+.filters-panel {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.28s ease, opacity 0.2s ease, margin-top 0.2s ease;
+  margin-top: 0;
+}
+
+.filters-panel.is-open {
+  max-height: 1400px;
+  opacity: 1;
+  margin-top: 12px;
 }
 
 .portfolio-title {

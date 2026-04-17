@@ -240,7 +240,17 @@ function PropertyCard({ property, selected, onSelect }) {
 
 /* ---------- Portfolio (left pane) ---------- */
 
-function Portfolio({ properties, totalCount, filters, onFiltersChange, options, selectedId, onSelect }) {
+function countActiveFilters(filters) {
+  return Object.values(filters).filter((v) => v !== 'All' && v !== 'all').length;
+}
+
+function Portfolio({
+  properties, totalCount, filters, onFiltersChange, onFiltersReset,
+  options, selectedId, onSelect,
+}) {
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const activeCount = countActiveFilters(filters);
+
   return (
     <aside className="portfolio">
       <div className="portfolio-header">
@@ -253,7 +263,53 @@ function Portfolio({ properties, totalCount, filters, onFiltersChange, options, 
             )}
           </span>
         </div>
-        <Filters filters={filters} onChange={onFiltersChange} options={options} />
+
+        <div className="filters-toolbar">
+          <button
+            type="button"
+            className={`filters-toggle${isFiltersOpen ? ' is-open' : ''}`}
+            onClick={() => setIsFiltersOpen((v) => !v)}
+            aria-expanded={isFiltersOpen}
+            aria-controls="filters-panel"
+          >
+            <span className="filters-toggle-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M4 5 H20 M7 12 H17 M10 19 H14"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                />
+              </svg>
+            </span>
+            <span className="filters-toggle-label">Filters</span>
+            {activeCount > 0 && (
+              <span className="filters-toggle-count">{activeCount}</span>
+            )}
+            <span className="filters-toggle-chevron" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M6 9 L12 15 L18 9"
+                  stroke="currentColor" strokeWidth="2.2"
+                  strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          </button>
+
+          {activeCount > 0 && (
+            <button
+              type="button"
+              className="filters-clear"
+              onClick={onFiltersReset}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        <div
+          id="filters-panel"
+          className={`filters-panel${isFiltersOpen ? ' is-open' : ''}`}
+        >
+          <Filters filters={filters} onChange={onFiltersChange} options={options} />
+        </div>
       </div>
 
       <div className="portfolio-list">
@@ -600,6 +656,7 @@ function App() {
           totalCount={all.length}
           filters={filters}
           onFiltersChange={setFilters}
+          onFiltersReset={() => setFilters(DEFAULT_FILTERS)}
           options={options}
           selectedId={selectedId}
           onSelect={setSelectedId}
