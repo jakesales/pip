@@ -44,38 +44,38 @@ window.TENURES = ['Freehold', 'Leasehold', 'Share of Freehold'];
 window.EPC_RATINGS = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
 window.ALERT_TAGS = [
-  'Flood/subsidence exposure',
+  'Flood/Subsidence Risk',
   'Crime spikes',
   'Environmental risk',
   'EPC Rating',
-  'Listed Building',
-  'Non-Standard construction',
+  'Listed building',
+  'Non-standard construction',
 ];
 
 // Per-neighbourhood pool of plausible alert tags. Picked from when we
 // assign tags to the 20 chosen properties, so the tag/area pairing is
 // believable on the map.
 const TAGS_BY_NEIGHBOURHOOD = {
-  'Westminster':       ['Listed Building', 'Crime spikes'],
-  'Belgravia':         ['Listed Building'],
-  'Pimlico':           ['Listed Building', 'EPC Rating'],
-  'Chelsea':           ['Listed Building'],
+  'Westminster':       ['Listed building', 'Crime spikes'],
+  'Belgravia':         ['Listed building'],
+  'Pimlico':           ['Listed building', 'EPC Rating'],
+  'Chelsea':           ['Listed building'],
   'Clapham':           ['EPC Rating', 'Crime spikes'],
-  'Earls Court':       ['Crime spikes', 'Non-Standard construction'],
-  'Fulham':            ['Flood/subsidence exposure', 'EPC Rating'],
-  'South Kensington':  ['Listed Building'],
-  'South Lambeth':     ['Environmental risk', 'Crime spikes', 'Non-Standard construction'],
+  'Earls Court':       ['Crime spikes', 'Non-standard construction'],
+  'Fulham':            ['Flood/Subsidence Risk', 'EPC Rating'],
+  'South Kensington':  ['Listed building'],
+  'South Lambeth':     ['Environmental risk', 'Crime spikes', 'Non-standard construction'],
   'Brixton':           ['Crime spikes', 'EPC Rating'],
-  'West Brompton':     ['Listed Building', 'EPC Rating'],
-  'Battersea':         ['Flood/subsidence exposure', 'Environmental risk'],
-  'Balham':            ['EPC Rating', 'Non-Standard construction'],
-  'Barnes':            ['Flood/subsidence exposure', 'Listed Building'],
-  'Mortlake':          ['Flood/subsidence exposure'],
-  'Putney':            ['Flood/subsidence exposure', 'EPC Rating'],
-  'Streatham':         ['Crime spikes', 'EPC Rating', 'Non-Standard construction'],
+  'West Brompton':     ['Listed building', 'EPC Rating'],
+  'Battersea':         ['Flood/Subsidence Risk', 'Environmental risk'],
+  'Balham':            ['EPC Rating', 'Non-standard construction'],
+  'Barnes':            ['Flood/Subsidence Risk', 'Listed building'],
+  'Mortlake':          ['Flood/Subsidence Risk'],
+  'Putney':            ['Flood/Subsidence Risk', 'EPC Rating'],
+  'Streatham':         ['Crime spikes', 'EPC Rating', 'Non-standard construction'],
   'Tooting':           ['Crime spikes', 'EPC Rating'],
-  'Wandsworth':        ['Flood/subsidence exposure', 'Environmental risk'],
-  'Wimbledon':         ['EPC Rating', 'Non-Standard construction'],
+  'Wandsworth':        ['Flood/Subsidence Risk', 'Environmental risk'],
+  'Wimbledon':         ['EPC Rating', 'Non-standard construction'],
 };
 
 /* ---------- seeded PRNG (Mulberry32) ---------- */
