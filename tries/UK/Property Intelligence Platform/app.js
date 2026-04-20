@@ -73,6 +73,170 @@ const SORT_OPTIONS = [
 ];
 
 const SEVERITY_RANK = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+const SUMMARY_TAG_ORDER = [
+  'Flood/subsidence exposure',
+  'Crime spikes',
+  'Environmental risk',
+  'EPC Rating',
+  'Listed Building',
+  'Non-Standard construction',
+];
+const ADDRESS_STEM_OPTIONS = [
+  'Station Road',
+  'High Street',
+  'Church Lane',
+  'Park Avenue',
+  'Victoria Road',
+];
+
+function SummaryTagIcon({ tag }) {
+  const base = { width: '14', height: '14', viewBox: '0 0 24 24', fill: 'none', 'aria-hidden': 'true' };
+  if (tag === 'Flood/subsidence exposure') {
+    return (
+      <svg {...base}>
+        <path d="M12 3 C10 6 7 9 7 12 A5 5 0 0 0 17 12 C17 9 14 6 12 3 Z" stroke="currentColor" strokeWidth="1.8" />
+        <path d="M4 18 C5 17 6 17 7 18 C8 19 9 19 10 18 C11 17 12 17 13 18 C14 19 15 19 16 18 C17 17 18 17 20 18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (tag === 'Crime spikes') {
+    return (
+      <svg {...base}>
+        <path d="M4 14 L10 8 L14 12 L20 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M16 6 H20 V10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (tag === 'Environmental risk') {
+    return (
+      <svg {...base}>
+        <path d="M6 14 C6 10 10 7 15 6 C14 11 11 16 7 17 C6.4 16 6 15 6 14 Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+        <path d="M8 16 L12 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (tag === 'EPC Rating') {
+    return (
+      <svg {...base}>
+        <rect x="5" y="4" width="14" height="16" rx="2" stroke="currentColor" strokeWidth="1.8" />
+        <path d="M8 9 H16 M8 13 H13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (tag === 'Listed Building') {
+    return (
+      <svg {...base}>
+        <path d="M4 9 L12 4 L20 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M6 10 V18 M10 10 V18 M14 10 V18 M18 10 V18 M4 18 H20" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...base}>
+      <path d="M4 18 H20 M6 18 V12 L10 8 V18 M14 18 V10 L18 6 V18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SummaryBar({ counts, taggedTotal, activeTag, onTagToggle }) {
+  return (
+    <section className="summary-bar" aria-label="Alert tag summary">
+      <div className="summary-bar-title">
+        <span className="summary-bar-title-main">Alert Summary</span>
+        <span className="summary-bar-title-sub">{taggedTotal} tagged properties</span>
+      </div>
+      <div className="summary-cards">
+        {SUMMARY_TAG_ORDER.map((tag) => (
+          <button
+            key={tag}
+            type="button"
+            className={`summary-card${activeTag === tag ? ' is-active' : ''}`}
+            onClick={() => onTagToggle(tag)}
+            aria-pressed={activeTag === tag}
+          >
+            <span className="summary-card-icon">
+              <SummaryTagIcon tag={tag} />
+            </span>
+            <span className="summary-card-label">{tag}</span>
+            <span className="summary-card-count">{counts[tag] || 0}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function nextPropertyId(existing) {
+  const highest = existing.reduce((max, p) => {
+    const n = Number(String(p.id || '').replace('p-', ''));
+    return Number.isFinite(n) ? Math.max(max, n) : max;
+  }, 0);
+  return `p-${String(highest + 1).padStart(3, '0')}`;
+}
+
+function postcodeArea(postcode) {
+  return (postcode || '').trim().toUpperCase().split(' ')[0] || 'SW1A';
+}
+
+function postcodeDistrict(postcode) {
+  const area = postcodeArea(postcode);
+  const letters = (area.match(/^[A-Z]+/) || ['SW'])[0];
+  const numbers = (area.match(/\d+/) || ['1'])[0];
+  return `${letters}${numbers}`;
+}
+
+function makeAddressOptions(postcode) {
+  const district = postcodeDistrict(postcode);
+  return ADDRESS_STEM_OPTIONS.map((stem, idx) => ({
+    value: `${idx + 10} ${stem}, ${district}`,
+    label: `${idx + 10} ${stem}, ${district}`,
+  }));
+}
+
+function createNewProperty({ postcode, address }, existing) {
+  const id = nextPropertyId(existing);
+  const area = postcodeArea(postcode);
+  const nearby = existing.filter((p) => outwardCode(p.postcode) === area);
+  const nowIso = new Date().toISOString().slice(0, 10);
+  const baseLat = nearby.length
+    ? nearby.reduce((sum, p) => sum + p.lat, 0) / nearby.length
+    : 51.475;
+  const baseLng = nearby.length
+    ? nearby.reduce((sum, p) => sum + p.lng, 0) / nearby.length
+    : -0.18;
+  const jitter = () => (Math.random() * 2 - 1) * 0.004;
+  const avgValue = nearby.length
+    ? Math.round(nearby.reduce((sum, p) => sum + p.estimatedValue, 0) / nearby.length)
+    : 850000;
+
+  return {
+    id,
+    address,
+    city: nearby[0] ? nearby[0].city : 'London',
+    postcode: postcode.trim().toUpperCase(),
+    lat: baseLat + jitter(),
+    lng: baseLng + jitter(),
+    severity: 'Low',
+    dateAdded: nowIso,
+    signalType: 'Listing detected',
+    workflowStatus: 'New',
+    assignedTo: 'Unassigned',
+    type: nearby[0] ? nearby[0].type : 'Flat',
+    bedrooms: 2,
+    bathrooms: 1,
+    sqft: 800,
+    yearBuilt: 1998,
+    estimatedValue: avgValue,
+    lastValuation: nowIso,
+    tenure: 'Leasehold',
+    epc: 'C',
+    isUnlicensedHmo: false,
+    floodRisk: 'Low',
+    notes: 'Newly added property awaiting full enrichment and signal refresh.',
+    pillTag: null,
+    alertTags: [],
+  };
+}
 
 function sortProperties(items, sortBy) {
   const copy = items.slice();
@@ -266,7 +430,7 @@ function countActiveFilters(filters) {
 
 function Portfolio({
   properties, totalCount, filters, onFiltersChange, onFiltersReset,
-  sortBy, onSortChange, options, selectedId, onSelect,
+  sortBy, onSortChange, options, selectedId, onSelect, onAddProperty,
 }) {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const activeCount = countActiveFilters(filters);
@@ -278,12 +442,21 @@ function Portfolio({
       <div className="portfolio-header">
         <div className="portfolio-title-row">
           <h2 className="portfolio-title">Portfolio</h2>
-          <span className="portfolio-count">
-            {properties.length}
-            {properties.length !== totalCount && (
-              <span className="portfolio-count-total"> / {totalCount}</span>
-            )}
-          </span>
+          <div className="portfolio-title-actions">
+            <span className="portfolio-count">
+              {properties.length}
+              {properties.length !== totalCount && (
+                <span className="portfolio-count-total"> / {totalCount}</span>
+              )}
+            </span>
+            <button
+              type="button"
+              className="portfolio-add"
+              onClick={onAddProperty}
+            >
+              + Add property
+            </button>
+          </div>
         </div>
 
         <div className="filters-toolbar">
@@ -427,20 +600,6 @@ function MapView({ properties, selectedId, onSelect, visible }) {
       const hasAlerts = p.alertTags && p.alertTags.length > 0;
       const isSelected = p.id === selectedId;
 
-      // For tagged properties we render two layers: an outer red ring,
-      // then the standard severity-coloured marker on top.
-      if (hasAlerts) {
-        const ring = L.circleMarker([p.lat, p.lng], {
-          radius: isSelected ? 16 : 12,
-          color: '#dc2626',
-          weight: 3,
-          opacity: 0.9,
-          fill: false,
-          interactive: false,
-        }).addTo(map);
-        markersRef.current.set(p.id + '__ring', ring);
-      }
-
       const tagList = hasAlerts
         ? `<div class="map-popup-alerts">${p.alertTags
             .map((t) => `<span class="alert-tag">${t}</span>`)
@@ -448,11 +607,12 @@ function MapView({ properties, selectedId, onSelect, visible }) {
         : '';
 
       const marker = L.circleMarker([p.lat, p.lng], {
-        radius: isSelected ? 11 : 7,
-        color: '#ffffff',
-        weight: 2,
-        fillColor: SEVERITY_COLOR[p.severity] || '#066abe',
-        fillOpacity: 0.95,
+        radius: isSelected ? 10 : 8,
+        color: '#b91c1c',
+        weight: isSelected ? 2 : 1.5,
+        opacity: 0.75,
+        fillColor: '#dc2626',
+        fillOpacity: 0.35,
       })
         .addTo(map)
         .bindPopup(
@@ -468,13 +628,26 @@ function MapView({ properties, selectedId, onSelect, visible }) {
         .on('click', () => onSelect(p.id));
 
       markersRef.current.set(p.id, marker);
+
+      if (hasAlerts) {
+        const alertCore = L.circleMarker([p.lat, p.lng], {
+          radius: isSelected ? 3.5 : 3,
+          color: '#111111',
+          weight: 1,
+          opacity: 0.95,
+          fillColor: '#111111',
+          fillOpacity: 0.95,
+          interactive: false,
+        }).addTo(map);
+        markersRef.current.set(`${p.id}__core`, alertCore);
+      }
     });
 
     if (properties.length) {
       const latLngs = properties.map((p) => [p.lat, p.lng]);
       map.fitBounds(latLngs, { padding: [40, 40], maxZoom: 14, animate: false });
     }
-  }, [properties, onSelect]);
+  }, [properties, selectedId, onSelect]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -495,13 +668,10 @@ function MapView({ properties, selectedId, onSelect, visible }) {
       <div ref={containerRef} className="map-container" />
 
       <div className="map-legend">
-        <span className="legend-title">Severity</span>
-        <span className="legend-item"><i style={{ background: SEVERITY_COLOR.Low }} />Low</span>
-        <span className="legend-item"><i style={{ background: SEVERITY_COLOR.Medium }} />Medium</span>
-        <span className="legend-item"><i style={{ background: SEVERITY_COLOR.High }} />High</span>
-        <span className="legend-item"><i style={{ background: SEVERITY_COLOR.Critical }} />Critical</span>
+        <span className="legend-title">Markers</span>
+        <span className="legend-item"><i className="legend-dot-red" />Property</span>
         <span className="legend-divider" />
-        <span className="legend-item"><i className="legend-ring" />Has alert tag</span>
+        <span className="legend-item"><i className="legend-dot-alert" />Has alert tag</span>
       </div>
     </div>
   );
@@ -635,6 +805,7 @@ const DEFAULT_FILTERS = {
   tenure: 'All',
   epc: 'All',
   hmo: 'All',
+  summaryTag: 'All',
 };
 
 function applyFilters(items, filters) {
@@ -651,6 +822,7 @@ function applyFilters(items, filters) {
 
     if (filters.hmo === 'yes' && !p.isUnlicensedHmo) return false;
     if (filters.hmo === 'no' && p.isUnlicensedHmo) return false;
+    if (filters.summaryTag !== 'All' && p.pillTag !== filters.summaryTag) return false;
 
     if (filters.dateAdded !== 'all') {
       const days = Number(filters.dateAdded);
@@ -664,11 +836,14 @@ function applyFilters(items, filters) {
 }
 
 function App() {
-  const all = window.PROPERTIES || [];
+  const [all, setAll] = useState(() => (window.PROPERTIES || []));
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [sortBy, setSortBy] = useState('date-desc');
   const [selectedId, setSelectedId] = useState(all[0] ? all[0].id : null);
   const [activeTab, setActiveTab] = useState('map');
+  const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
+  const [newPostcode, setNewPostcode] = useState('');
+  const [newAddress, setNewAddress] = useState('');
 
   const options = useMemo(
     () => ({
@@ -692,6 +867,49 @@ function App() {
     () => all.find((p) => p.id === selectedId) || null,
     [all, selectedId]
   );
+  const summaryCounts = useMemo(() => {
+    const counts = {};
+    SUMMARY_TAG_ORDER.forEach((tag) => { counts[tag] = 0; });
+    all.forEach((p) => {
+      if (p.pillTag && counts[p.pillTag] !== undefined) counts[p.pillTag] += 1;
+    });
+    return counts;
+  }, [all]);
+  const taggedTotal = useMemo(
+    () => all.filter((p) => Boolean(p.pillTag)).length,
+    [all]
+  );
+  const newAddressOptions = useMemo(
+    () => makeAddressOptions(newPostcode),
+    [newPostcode]
+  );
+  const toggleSummaryTag = (tag) => {
+    setFilters((prev) => ({
+      ...prev,
+      summaryTag: prev.summaryTag === tag ? 'All' : tag,
+    }));
+  };
+  const openAddProperty = () => {
+    setIsAddPropertyOpen(true);
+    setNewPostcode('');
+    setNewAddress('');
+  };
+  const closeAddProperty = () => {
+    setIsAddPropertyOpen(false);
+    setNewPostcode('');
+    setNewAddress('');
+  };
+  const submitAddProperty = () => {
+    if (!newPostcode.trim() || !newAddress) return;
+    const newProperty = createNewProperty(
+      { postcode: newPostcode, address: newAddress },
+      all
+    );
+    setAll((prev) => [newProperty, ...prev]);
+    setSelectedId(newProperty.id);
+    setActiveTab('details');
+    closeAddProperty();
+  };
 
   return (
     <div className="app">
@@ -713,6 +931,13 @@ function App() {
         </div>
       </header>
 
+      <SummaryBar
+        counts={summaryCounts}
+        taggedTotal={taggedTotal}
+        activeTag={filters.summaryTag}
+        onTagToggle={toggleSummaryTag}
+      />
+
       <main className="app-main">
         <Portfolio
           properties={filtered}
@@ -725,6 +950,7 @@ function App() {
           options={options}
           selectedId={selectedId}
           onSelect={setSelectedId}
+          onAddProperty={openAddProperty}
         />
 
         <section className="workspace">
@@ -787,6 +1013,60 @@ function App() {
           </div>
         </section>
       </main>
+
+      {isAddPropertyOpen && (
+        <div className="modal-backdrop" role="presentation" onClick={closeAddProperty}>
+          <div className="modal-card" role="dialog" aria-modal="true" aria-label="Add property" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Add new property</h2>
+              <button type="button" className="modal-close" onClick={closeAddProperty} aria-label="Close">
+                ×
+              </button>
+            </div>
+            <p className="modal-subtitle">
+              Enter postcode and select an address to add this property to the portfolio.
+            </p>
+            <div className="modal-fields">
+              <label className="modal-field">
+                <span>Postcode</span>
+                <input
+                  type="text"
+                  placeholder="e.g. SW11 3AA"
+                  value={newPostcode}
+                  onChange={(e) => {
+                    setNewPostcode(e.target.value.toUpperCase());
+                    setNewAddress('');
+                  }}
+                />
+              </label>
+              <label className="modal-field">
+                <span>Address</span>
+                <select
+                  value={newAddress}
+                  onChange={(e) => setNewAddress(e.target.value)}
+                  disabled={!newPostcode.trim()}
+                >
+                  <option value="">Select address</option>
+                  {newAddressOptions.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="btn-secondary" onClick={closeAddProperty}>Cancel</button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={submitAddProperty}
+                disabled={!newPostcode.trim() || !newAddress}
+              >
+                Add property
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
