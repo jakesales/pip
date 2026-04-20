@@ -918,7 +918,7 @@ button {
   width: 100%;
 }
 
-/* Keep basemap subdued so severity markers stand out. */
+/* Keep basemap subdued so markers stand out. */
 .map-container .leaflet-tile {
   filter: grayscale(1);
 }
@@ -956,19 +956,21 @@ button {
 
 .legend-item i {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  border: 2px solid white;
+  border: 1px solid #b91c1c;
   box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
 }
 
-.legend-item i.legend-ring {
-  background: transparent;
-  border: 2px solid #dc2626;
-  box-shadow: none;
-  width: 12px;
-  height: 12px;
+.legend-item i.legend-dot-red {
+  background: rgba(220, 38, 38, 0.35);
+}
+
+.legend-item i.legend-dot-alert {
+  background:
+    radial-gradient(circle at center, #111111 0 2.2px, transparent 2.3px),
+    rgba(220, 38, 38, 0.35);
 }
 
 .legend-divider {

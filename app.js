@@ -600,20 +600,6 @@ function MapView({ properties, selectedId, onSelect, visible }) {
       const hasAlerts = p.alertTags && p.alertTags.length > 0;
       const isSelected = p.id === selectedId;
 
-      // For tagged properties we render two layers: an outer red ring,
-      // then the standard severity-coloured marker on top.
-      if (hasAlerts) {
-        const ring = L.circleMarker([p.lat, p.lng], {
-          radius: isSelected ? 16 : 12,
-          color: '#dc2626',
-          weight: 3,
-          opacity: 0.9,
-          fill: false,
-          interactive: false,
-        }).addTo(map);
-        markersRef.current.set(p.id + '__ring', ring);
-      }
-
       const tagList = hasAlerts
         ? `<div class="map-popup-alerts">${p.alertTags
             .map((t) => `<span class="alert-tag">${t}</span>`)
@@ -621,11 +607,12 @@ function MapView({ properties, selectedId, onSelect, visible }) {
         : '';
 
       const marker = L.circleMarker([p.lat, p.lng], {
-        radius: isSelected ? 11 : 7,
-        color: '#ffffff',
-        weight: 2,
-        fillColor: SEVERITY_COLOR[p.severity] || '#066abe',
-        fillOpacity: 0.95,
+        radius: isSelected ? 10 : 8,
+        color: '#b91c1c',
+        weight: isSelected ? 2 : 1.5,
+        opacity: 0.75,
+        fillColor: '#dc2626',
+        fillOpacity: 0.35,
       })
         .addTo(map)
         .bindPopup(
@@ -641,13 +628,26 @@ function MapView({ properties, selectedId, onSelect, visible }) {
         .on('click', () => onSelect(p.id));
 
       markersRef.current.set(p.id, marker);
+
+      if (hasAlerts) {
+        const alertCore = L.circleMarker([p.lat, p.lng], {
+          radius: isSelected ? 3.5 : 3,
+          color: '#111111',
+          weight: 1,
+          opacity: 0.95,
+          fillColor: '#111111',
+          fillOpacity: 0.95,
+          interactive: false,
+        }).addTo(map);
+        markersRef.current.set(`${p.id}__core`, alertCore);
+      }
     });
 
     if (properties.length) {
       const latLngs = properties.map((p) => [p.lat, p.lng]);
       map.fitBounds(latLngs, { padding: [40, 40], maxZoom: 14, animate: false });
     }
-  }, [properties, onSelect]);
+  }, [properties, selectedId, onSelect]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -668,13 +668,10 @@ function MapView({ properties, selectedId, onSelect, visible }) {
       <div ref={containerRef} className="map-container" />
 
       <div className="map-legend">
-        <span className="legend-title">Severity</span>
-        <span className="legend-item"><i style={{ background: SEVERITY_COLOR.Low }} />Low</span>
-        <span className="legend-item"><i style={{ background: SEVERITY_COLOR.Medium }} />Medium</span>
-        <span className="legend-item"><i style={{ background: SEVERITY_COLOR.High }} />High</span>
-        <span className="legend-item"><i style={{ background: SEVERITY_COLOR.Critical }} />Critical</span>
+        <span className="legend-title">Markers</span>
+        <span className="legend-item"><i className="legend-dot-red" />Property</span>
         <span className="legend-divider" />
-        <span className="legend-item"><i className="legend-ring" />Has alert tag</span>
+        <span className="legend-item"><i className="legend-dot-alert" />Has alert tag</span>
       </div>
     </div>
   );
