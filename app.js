@@ -142,7 +142,7 @@ function SummaryBar({ counts, taggedTotal, activeTag, onTagToggle }) {
   return (
     <section className="summary-bar" aria-label="Alert tag summary">
       <div className="summary-bar-title">
-        <span className="summary-bar-title-main">Alert Summary</span>
+        <span className="summary-bar-title-main">Current Alerts by Dataset</span>
         <span className="summary-bar-title-sub">{taggedTotal} tagged properties</span>
       </div>
       <div className="summary-cards">
@@ -233,7 +233,7 @@ function createNewProperty({ postcode, address }, existing) {
     isUnlicensedHmo: false,
     floodRisk: 'Low',
     notes: 'Newly added property awaiting full enrichment and signal refresh.',
-    pillTag: null,
+    pillTag: 'NEW',
     alertTags: [],
   };
 }
@@ -334,27 +334,15 @@ function Filters({ filters, onChange, options }) {
 
       <div className="filter-group filter-group-custom">
         <div className="filter-group-header">
-          <span className="filter-group-title">Client-configured filters</span>
-          <span className="filter-group-tag">Custom</span>
+          <span className="filter-group-title">Dataset filters</span>
+          <span className="filter-group-tag">Dataset</span>
         </div>
         <div className="filters">
           <FilterSelect
-            label="Tenure"
-            value={filters.tenure}
-            onChange={set('tenure')}
-            options={['All', ...options.tenures]}
-          />
-          <FilterSelect
-            label="EPC rating"
-            value={filters.epc}
-            onChange={set('epc')}
-            options={['All', ...options.epcs]}
-          />
-          <FilterSelect
-            label="Unlicensed HMO"
-            value={filters.hmo}
-            onChange={set('hmo')}
-            options={HMO_OPTIONS}
+            label="Dataset"
+            value={filters.summaryTag}
+            onChange={set('summaryTag')}
+            options={['All', ...SUMMARY_TAG_ORDER]}
           />
         </div>
       </div>
@@ -876,7 +864,7 @@ function App() {
     return counts;
   }, [all]);
   const taggedTotal = useMemo(
-    () => all.filter((p) => Boolean(p.pillTag)).length,
+    () => all.filter((p) => SUMMARY_TAG_ORDER.includes(p.pillTag)).length,
     [all]
   );
   const newAddressOptions = useMemo(
