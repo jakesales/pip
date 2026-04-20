@@ -147,6 +147,8 @@ button {
 }
 
 .summary-card {
+  appearance: none;
+  -webkit-appearance: none;
   border: 1px solid var(--stroke);
   background: var(--surface);
   border-radius: 10px;
@@ -156,6 +158,31 @@ button {
   align-items: center;
   gap: 8px;
   min-width: 0;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.summary-card:hover {
+  border-color: #cfd6de;
+  background: #fdfefe;
+}
+
+.summary-card:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-50);
+}
+
+.summary-card.is-active {
+  border-color: var(--primary);
+  background: var(--primary-50);
+  box-shadow: 0 0 0 1px rgba(6, 106, 190, 0.18);
+}
+
+.summary-card.is-active .summary-card-label {
+  color: var(--primary);
+  font-weight: 600;
 }
 
 .summary-card-icon {
@@ -215,6 +242,29 @@ button {
   align-items: baseline;
   justify-content: space-between;
   margin-bottom: 10px;
+}
+
+.portfolio-title-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.portfolio-add {
+  border: 1px solid var(--primary);
+  background: var(--primary-50);
+  color: var(--primary);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.portfolio-add:hover {
+  background: #e9f3fd;
+  border-color: #035a9f;
 }
 
 /* ---------- Collapsible filters ---------- */
@@ -1199,4 +1249,126 @@ button {
 .leaflet-container {
   background: #eaecef;
   font-family: inherit;
+}
+
+/* ---------- Modal ---------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 23, 35, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1400;
+  padding: 16px;
+}
+
+.modal-card {
+  width: min(520px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--stroke);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(2, 6, 23, 0.2);
+  padding: 18px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.modal-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--stroke);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.modal-subtitle {
+  margin: 6px 0 14px 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.modal-fields {
+  display: grid;
+  gap: 10px;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-field span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.modal-field input,
+.modal-field select {
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 9px 10px;
+  font-size: 14px;
+}
+
+.modal-field input:focus,
+.modal-field select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(6, 106, 190, 0.16);
+}
+
+.modal-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btn-primary,
+.btn-secondary {
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  border: 1px solid var(--stroke);
+  background: var(--surface);
+  color: var(--text-muted);
 }

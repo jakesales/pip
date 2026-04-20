@@ -81,6 +81,13 @@ const SUMMARY_TAG_ORDER = [
   'Listed Building',
   'Non-Standard construction',
 ];
+const ADDRESS_STEM_OPTIONS = [
+  'Station Road',
+  'High Street',
+  'Church Lane',
+  'Park Avenue',
+  'Victoria Road',
+];
 
 function SummaryTagIcon({ tag }) {
   const base = { width: '14', height: '14', viewBox: '0 0 24 24', fill: 'none', 'aria-hidden': 'true' };
@@ -131,7 +138,7 @@ function SummaryTagIcon({ tag }) {
   );
 }
 
-function SummaryBar({ counts, taggedTotal }) {
+function SummaryBar({ counts, taggedTotal, activeTag, onTagToggle }) {
   return (
     <section className="summary-bar" aria-label="Alert tag summary">
       <div className="summary-bar-title">
@@ -140,17 +147,95 @@ function SummaryBar({ counts, taggedTotal }) {
       </div>
       <div className="summary-cards">
         {SUMMARY_TAG_ORDER.map((tag) => (
-          <article key={tag} className="summary-card">
+          <button
+            key={tag}
+            type="button"
+            className={`summary-card${activeTag === tag ? ' is-active' : ''}`}
+            onClick={() => onTagToggle(tag)}
+            aria-pressed={activeTag === tag}
+          >
             <span className="summary-card-icon">
               <SummaryTagIcon tag={tag} />
             </span>
             <span className="summary-card-label">{tag}</span>
             <span className="summary-card-count">{counts[tag] || 0}</span>
-          </article>
+          </button>
         ))}
       </div>
     </section>
   );
+}
+
+function nextPropertyId(existing) {
+  const highest = existing.reduce((max, p) => {
+    const n = Number(String(p.id || '').replace('p-', ''));
+    return Number.isFinite(n) ? Math.max(max, n) : max;
+  }, 0);
+  return `p-${String(highest + 1).padStart(3, '0')}`;
+}
+
+function postcodeArea(postcode) {
+  return (postcode || '').trim().toUpperCase().split(' ')[0] || 'SW1A';
+}
+
+function postcodeDistrict(postcode) {
+  const area = postcodeArea(postcode);
+  const letters = (area.match(/^[A-Z]+/) || ['SW'])[0];
+  const numbers = (area.match(/\d+/) || ['1'])[0];
+  return `${letters}${numbers}`;
+}
+
+function makeAddressOptions(postcode) {
+  const district = postcodeDistrict(postcode);
+  return ADDRESS_STEM_OPTIONS.map((stem, idx) => ({
+    value: `${idx + 10} ${stem}, ${district}`,
+    label: `${idx + 10} ${stem}, ${district}`,
+  }));
+}
+
+function createNewProperty({ postcode, address }, existing) {
+  const id = nextPropertyId(existing);
+  const area = postcodeArea(postcode);
+  const nearby = existing.filter((p) => outwardCode(p.postcode) === area);
+  const nowIso = new Date().toISOString().slice(0, 10);
+  const baseLat = nearby.length
+    ? nearby.reduce((sum, p) => sum + p.lat, 0) / nearby.length
+    : 51.475;
+  const baseLng = nearby.length
+    ? nearby.reduce((sum, p) => sum + p.lng, 0) / nearby.length
+    : -0.18;
+  const jitter = () => (Math.random() * 2 - 1) * 0.004;
+  const avgValue = nearby.length
+    ? Math.round(nearby.reduce((sum, p) => sum + p.estimatedValue, 0) / nearby.length)
+    : 850000;
+
+  return {
+    id,
+    address,
+    city: nearby[0] ? nearby[0].city : 'London',
+    postcode: postcode.trim().toUpperCase(),
+    lat: baseLat + jitter(),
+    lng: baseLng + jitter(),
+    severity: 'Low',
+    dateAdded: nowIso,
+    signalType: 'Listing detected',
+    workflowStatus: 'New',
+    assignedTo: 'Unassigned',
+    type: nearby[0] ? nearby[0].type : 'Flat',
+    bedrooms: 2,
+    bathrooms: 1,
+    sqft: 800,
+    yearBuilt: 1998,
+    estimatedValue: avgValue,
+    lastValuation: nowIso,
+    tenure: 'Leasehold',
+    epc: 'C',
+    isUnlicensedHmo: false,
+    floodRisk: 'Low',
+    notes: 'Newly added property awaiting full enrichment and signal refresh.',
+    pillTag: null,
+    alertTags: [],
+  };
 }
 
 function sortProperties(items, sortBy) {
@@ -345,7 +430,7 @@ function countActiveFilters(filters) {
 
 function Portfolio({
   properties, totalCount, filters, onFiltersChange, onFiltersReset,
-  sortBy, onSortChange, options, selectedId, onSelect,
+  sortBy, onSortChange, options, selectedId, onSelect, onAddProperty,
 }) {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const activeCount = countActiveFilters(filters);
@@ -357,12 +442,21 @@ function Portfolio({
       <div className="portfolio-header">
         <div className="portfolio-title-row">
           <h2 className="portfolio-title">Portfolio</h2>
-          <span className="portfolio-count">
-            {properties.length}
-            {properties.length !== totalCount && (
-              <span className="portfolio-count-total"> / {totalCount}</span>
-            )}
-          </span>
+          <div className="portfolio-title-actions">
+            <span className="portfolio-count">
+              {properties.length}
+              {properties.length !== totalCount && (
+                <span className="portfolio-count-total"> / {totalCount}</span>
+              )}
+            </span>
+            <button
+              type="button"
+              className="portfolio-add"
+              onClick={onAddProperty}
+            >
+              + Add property
+            </button>
+          </div>
         </div>
 
         <div className="filters-toolbar">
@@ -714,6 +808,7 @@ const DEFAULT_FILTERS = {
   tenure: 'All',
   epc: 'All',
   hmo: 'All',
+  summaryTag: 'All',
 };
 
 function applyFilters(items, filters) {
@@ -730,6 +825,7 @@ function applyFilters(items, filters) {
 
     if (filters.hmo === 'yes' && !p.isUnlicensedHmo) return false;
     if (filters.hmo === 'no' && p.isUnlicensedHmo) return false;
+    if (filters.summaryTag !== 'All' && p.pillTag !== filters.summaryTag) return false;
 
     if (filters.dateAdded !== 'all') {
       const days = Number(filters.dateAdded);
@@ -743,11 +839,14 @@ function applyFilters(items, filters) {
 }
 
 function App() {
-  const all = window.PROPERTIES || [];
+  const [all, setAll] = useState(() => (window.PROPERTIES || []));
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [sortBy, setSortBy] = useState('date-desc');
   const [selectedId, setSelectedId] = useState(all[0] ? all[0].id : null);
   const [activeTab, setActiveTab] = useState('map');
+  const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
+  const [newPostcode, setNewPostcode] = useState('');
+  const [newAddress, setNewAddress] = useState('');
 
   const options = useMemo(
     () => ({
@@ -783,6 +882,37 @@ function App() {
     () => all.filter((p) => Boolean(p.pillTag)).length,
     [all]
   );
+  const newAddressOptions = useMemo(
+    () => makeAddressOptions(newPostcode),
+    [newPostcode]
+  );
+  const toggleSummaryTag = (tag) => {
+    setFilters((prev) => ({
+      ...prev,
+      summaryTag: prev.summaryTag === tag ? 'All' : tag,
+    }));
+  };
+  const openAddProperty = () => {
+    setIsAddPropertyOpen(true);
+    setNewPostcode('');
+    setNewAddress('');
+  };
+  const closeAddProperty = () => {
+    setIsAddPropertyOpen(false);
+    setNewPostcode('');
+    setNewAddress('');
+  };
+  const submitAddProperty = () => {
+    if (!newPostcode.trim() || !newAddress) return;
+    const newProperty = createNewProperty(
+      { postcode: newPostcode, address: newAddress },
+      all
+    );
+    setAll((prev) => [newProperty, ...prev]);
+    setSelectedId(newProperty.id);
+    setActiveTab('details');
+    closeAddProperty();
+  };
 
   return (
     <div className="app">
@@ -804,7 +934,12 @@ function App() {
         </div>
       </header>
 
-      <SummaryBar counts={summaryCounts} taggedTotal={taggedTotal} />
+      <SummaryBar
+        counts={summaryCounts}
+        taggedTotal={taggedTotal}
+        activeTag={filters.summaryTag}
+        onTagToggle={toggleSummaryTag}
+      />
 
       <main className="app-main">
         <Portfolio
@@ -818,6 +953,7 @@ function App() {
           options={options}
           selectedId={selectedId}
           onSelect={setSelectedId}
+          onAddProperty={openAddProperty}
         />
 
         <section className="workspace">
@@ -880,6 +1016,60 @@ function App() {
           </div>
         </section>
       </main>
+
+      {isAddPropertyOpen && (
+        <div className="modal-backdrop" role="presentation" onClick={closeAddProperty}>
+          <div className="modal-card" role="dialog" aria-modal="true" aria-label="Add property" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Add new property</h2>
+              <button type="button" className="modal-close" onClick={closeAddProperty} aria-label="Close">
+                ×
+              </button>
+            </div>
+            <p className="modal-subtitle">
+              Enter postcode and select an address to add this property to the portfolio.
+            </p>
+            <div className="modal-fields">
+              <label className="modal-field">
+                <span>Postcode</span>
+                <input
+                  type="text"
+                  placeholder="e.g. SW11 3AA"
+                  value={newPostcode}
+                  onChange={(e) => {
+                    setNewPostcode(e.target.value.toUpperCase());
+                    setNewAddress('');
+                  }}
+                />
+              </label>
+              <label className="modal-field">
+                <span>Address</span>
+                <select
+                  value={newAddress}
+                  onChange={(e) => setNewAddress(e.target.value)}
+                  disabled={!newPostcode.trim()}
+                >
+                  <option value="">Select address</option>
+                  {newAddressOptions.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="btn-secondary" onClick={closeAddProperty}>Cancel</button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={submitAddProperty}
+                disabled={!newPostcode.trim() || !newAddress}
+              >
+                Add property
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
